@@ -1,2 +1,9 @@
+# Archivos de configuración
+package-lock.json
+
+# Archivos con información sensible
 .env
+
+# Directorios con información temporal o construíble
 */node_modules
+*/dist
