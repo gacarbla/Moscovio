@@ -1,0 +1,138 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id                      Int             @id                                     @default(autoincrement())
+    ddId                    String                  @db.VarChar(255)
+    joinedAt                DateTime                @db.DateTime(6)                 @default(now())
+    sanctions               Sanction[]
+    botSanctions            BotSanction[]
+    imposedSanctions        Sanction[]              @relation("ImposedByUser")
+    blacklistReports        BlackList[]
+    reportedBlacklist       BlackList[]             @relation("ImposedByUser")
+
+    @@unique([ddId])
+}   
+
+model Guild {   
+    id                      Int             @id                                     @default(autoincrement())
+    ddId                    String                  @db.VarChar(255)
+    joinedAt                DateTime                @db.DateTime(6)                 @default(now())
+    sanctions               Sanction[]
+    blacklisted             BlackList[]
+
+    @@unique([ddId])
+}
+
+model BlackList {
+    id                      Int             @id                                     @default(autoincrement())
+    userId                  Int             
+    user                    User                    @relation(fields: [userId], references: [id])
+    imposedByUserId         Int 
+    imposedByUser           User                    @relation("ImposedByUser", fields: [imposedByUserId], references: [id])
+    shortDescription        String                  @db.VarChar(255)
+    reason                  BlacklistedReason
+    imposedAt               DateTime                @db.DateTime(6)                 @default(now())
+    guildId                 Int
+    guild                   Guild                   @relation(fields: [guildId], references: [id])
+
+    @@unique([userId, guildId])
+}
+
+model Sanction {    
+    id                      Int             @id                                     @default(autoincrement())
+    idOnGuild               Int
+    guildId                 Int
+    guild                   Guild                   @relation(fields: [guildId], references: [id])
+    userId                  Int             
+    user                    User                    @relation(fields: [userId], references: [id])
+    imposedByUserId         Int 
+    imposedByUser           User                    @relation("ImposedByUser", fields: [imposedByUserId], references: [id])
+    type                    SanctionType
+    duration                Int?
+    durationType            DurationType?
+    status                  SanctionStatus                                          @default(PENDING)
+    title                   String                  @db.VarChar(255)
+    description             String                  @db.Text
+    imposedAt               DateTime                @db.DateTime(6)                 @default(now())
+    expiresAt               DateTime?               @db.DateTime(6)
+
+    @@unique([idOnGuild, guildId])
+}
+
+model BotSanction {
+    id                      Int             @id                                     @default(autoincrement())
+    userId                  Int             
+    user                    User                    @relation(fields: [userId], references: [id])
+    title                   String                  @db.VarChar(255)
+    description             String                  @db.Text
+    imposedAt               DateTime                @db.DateTime(6)                 @default(now())
+    expiresAt               DateTime?               @db.DateTime(6)
+    status                  SanctionStatus                                          @default(PENDING)
+    type                    BotSanctionType
+    duration                Int?
+
+}
+
+enum BlacklistedReason {
+    SPAM                        // Spam
+    HARASSMENT                  // Acoso
+    COMMITTED_SECURITY          // Seguridad comprometida
+    HATE_SPEECH                 // Discurso de odio
+    INAPPROPRIATE_CONTENT       // Contenido inapropiado
+    PRIVACY_VIOLATION           // Violación de la privacidad
+    VIOLENT_THREATS             // Amenazas
+    SELF_HARM                   // Autolesiones
+    COPYRIGHT_VIOLATION         // Incumplimiento del copyright
+    FALSE_INFORMATION           // Información falsa
+    FRAUD                       // Fraude
+    SCAM                        // Estafa
+    TERRORISM                   // Terrorismo
+    CHILD_EXPLOITATION          // Explotación infantil
+    ANIMAL_CRUELTY              // Crueldad animal
+    EXTORTION                   // Extorsión
+    DRUGS                       // Drogas
+    WEAPONS                     // Armas
+    UNAUTHORIZED_ADVERTISING    // Promoción no autorizada
+    DOXXING                     // Doxeo
+    MALWARE                     // Malware
+    HACKING                     // Hacking
+    OTHER                       // Otras razones
+}
+
+enum SanctionType {
+    WARNING
+    WARNING_REPORT
+    MUTE_TEXT
+    MUTE_VOICE
+    MUTE_ALL
+    KICK
+    KICK_REPORT
+    SOFTBAN
+    SOFTBAN_REPORT
+    BAN
+    BAN_REPORT
+}
+
+enum BotSanctionType {
+    WARNING
+    BAN
+}
+
+enum DurationType {
+    ABSOLUTE
+    RELATIVE
+}
+
+enum SanctionStatus {
+    ACTIVE
+    COMPLETED
+    PENDING
+    CANCELLED
+}
