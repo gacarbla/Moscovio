@@ -1,5 +1,6 @@
 services:
   mysql:
+    container_name: moscovio-db
     image: mysql:latest
     environment:
       - MYSQL_PASSWORD=password
@@ -9,11 +10,16 @@ services:
       - '3310:3306'
     volumes:
       - database_data:/var/lib/mysql
+    labels:
+      - "com.docker.compose.project=Moscovio"
 
   redis:
+    container_name: moscovio.redis
     image: redis:latest
     ports:
       - '6379:6379'
+    labels:
+      - "com.docker.compose.project=Moscovio"
 
 volumes:
   database_data:
